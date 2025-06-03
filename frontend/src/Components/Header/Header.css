@@ -1,0 +1,309 @@
+/* General Dashboard Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Header Left Section with Logo */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Logo Container */
+.header-logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo-container svg {
+  display: block;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+}
+
+.btn-secondary {
+  background-color: #9ca3af;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #6b7280;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(156, 163, 175, 0.2);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+/* Modal Content Box */
+.modal-content {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    0 8px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: fadeIn 0.2s ease-out;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Close Button */
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  font-size: 1.5rem;
+  color: black;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  padding: 0;
+  margin: 15px;
+}
+
+.modal-close:hover {
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+/* Modal Headings and Inputs */
+.modal-content h2 {
+  margin-top: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1.5rem;
+}
+
+.modal-content h3 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.modal-content select,
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  color: #111827;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.modal-content select:focus,
+.modal-content input:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* Buttons Inside Modal */
+.modal-content button {
+  margin-top: 1.5rem;
+}
+
+/* Status Badge Styling */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-badge.completed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.in-progress {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.pending {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Report Summary Table */
+.report-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.report-summary-table th,
+.report-summary-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.report-summary-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Audit Table Wrapper */
+.audit-table-wrapper {
+  margin-top: 2rem;
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.audit-table th,
+.audit-table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.audit-table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+}
+
+.audit-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .header-left {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .user-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+  
+  .modal-content {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+    padding: 1.5rem;
+  }
+  
+  .audit-table,
+  .report-summary-table {
+    font-size: 0.8rem;
+  }
+  
+  .audit-table th,
+  .audit-table td,
+  .report-summary-table th,
+  .report-summary-table td {
+    padding: 0.5rem;
+  }
+}

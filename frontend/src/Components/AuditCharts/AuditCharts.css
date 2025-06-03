@@ -1,0 +1,16 @@
+.audit-charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+  
+  .chart-card {
+    flex: 1;
+    width: 50px;
+    background: #fff;
+    height: 100px;
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  }
+  

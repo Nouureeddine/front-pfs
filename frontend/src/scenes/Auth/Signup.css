@@ -1,0 +1,35 @@
+/* Import all styles from Login.css */
+@import './Login.css';
+
+.signup-scene {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Role select specific styles */
+.role-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-top: 8px;
+  background-color: white;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Style the dropdown options */
+.role-select option {
+  padding: 8px;
+}
