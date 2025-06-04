@@ -1,60 +1,55 @@
-import { useState } from 'react';
-import './App.css';
-
-import Nav from './Components/Nav/Nav';
-import Docs from './Components/Docs/Docs';
-import RecentAudits from './Components/RecentAudits/RecentAudits';
-import Dashboard from './scenes/Dashboard/Dashboard';
+import React, { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Login from './scenes/Auth/Login';
 import Signup from './scenes/Auth/Signup';
-import RuleManagement from './Components/RulesManagement/RulesManagement';
+import Dashboard from './scenes/Dashboard/Dashboard';
+import './App.css';
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+function AuthWrapper({ onLogin, onSignupSuccess, user }) {
+  const [isLogin, setIsLogin] = useState(true);
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'recentAudits':
-        return <RecentAudits />;
-      case 'docs':
-        return <Docs />;
-      case 'rulesMg':
-        return <RuleManagement />;
-      default:
-        return <Dashboard />;
-    }
-  };
+  const handleSwitchToSignup = () => setIsLogin(false);
+  const handleSwitchToLogin = () => setIsLogin(true);
 
-  if (!isLoggedIn) {
-    return showSignup ? (
-      <Signup 
-        onSwitchToLogin={() => setShowSignup(false)}
-        onSignupSuccess={() => {
-          alert('Inscription réussie ! Vous pouvez maintenant vous connecter.');
-          setShowSignup(false);
-        }}
-      />
-    ) : (
-      <Login 
-        onLogin={() => setIsLoggedIn(true)}
-        onSwitchToSignup={() => setShowSignup(true)}
-      />
-    );
+  if (user) {
+    return <Navigate to="/dashboard" />;
   }
 
+  return isLogin ? (
+    <Login onSwitchToSignup={handleSwitchToSignup} onLogin={onLogin} />
+  ) : (
+    <Signup onSwitchToLogin={handleSwitchToLogin} onSignupSuccess={onSignupSuccess} />
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(null);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleSignupSuccess = (userData) => {
+    setUser(userData);
+  };
+
   return (
-    <div className="App" style={{ display: 'flex' }}>
-      <div className="leftContainer">
-        <Nav setActiveTab={setActiveTab} activeTab={activeTab} />
-      </div>
-      <div className="rightContainer" style={{ flex: 1, padding: '2rem' }}>
-        {renderContent()}
-      </div>
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={<AuthWrapper onLogin={handleLogin} onSignupSuccess={handleSignupSuccess} user={user} />}
+      />
+      <Route
+        path="/dashboard"
+        element={
+          user ? (
+            <Dashboard user={user} onLogout={() => setUser(null)} />
+          ) : (
+            <Navigate to="/" />
+          )
+        }
+      />
+    </Routes>
   );
 }
 

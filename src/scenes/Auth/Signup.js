@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Signup.css';
+import axios from 'axios';
 
 // AuditCloud Logo Component
 const AuditCloudLogo = ({ size = "large" }) => {
@@ -61,7 +62,7 @@ const AuditCloudLogo = ({ size = "large" }) => {
   );
 };
 
-export default function Signup({ onSwitchToLogin, onSignupSuccess }) {
+export default function Signup({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -94,13 +95,17 @@ export default function Signup({ onSwitchToLogin, onSignupSuccess }) {
         throw new Error('Les mots de passe ne correspondent pas');
       }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await axios.post('http://localhost:5000/api/signup', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role 
+      });
       
-      // Call the success handler with the role if needed
-      onSignupSuccess(formData.role);
+      // Redirect to root path (login page) on success
+      window.location.href = '/';
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }

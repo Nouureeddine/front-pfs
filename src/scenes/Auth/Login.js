@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './Login.css';
+import axios from 'axios';
 
 // AuditCloud Logo Component
 const AuditCloudLogo = ({ size = "large" }) => {
@@ -72,10 +73,19 @@ export default function Login({ onSwitchToSignup, onLogin }) {
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/login', {
+        email,
+        password
+      });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token); // Store token for protected routes
+      onLogin(user); // Call onLogin with user data
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
       setLoading(false);
-      onLogin(); // Simulate successful login
-    }, 1000);
+    }
   };
 
   return (

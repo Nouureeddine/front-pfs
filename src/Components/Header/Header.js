@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import StaticAuditScene from '../../scenes/Audit/StaticAudit';
-import DynamicAuditScene from '../../scenes/Audit/DynamicAudit';
 import StatsGrid from '../StatsGrid/StatsGrid'; // ✅ Make sure this path is correct
 import './Header.css';
+import axios from 'axios';
+import { jsPDF } from 'jspdf'; // Use named import for clarity
+import 'jspdf-autotable'; // Side-effect import to extend jsPDF
 
 // 🎯 AuditCloud Logo Component
 const AuditCloudLogo = ({ size = "small" }) => {
@@ -64,73 +65,189 @@ const AuditCloudLogo = ({ size = "small" }) => {
   );
 };
 
-// ✅ Mock data – replace with real audits/stats from context or props
-const allAudits = [
-  {
-    id: '001',
-    name: 'AWS Compliance 🛡️',
-    date: '2023-05-15',
-    status: 'Completed',
-    score: 92,
-    findings: 2,
-  },
-  {
-    id: '002',
-    name: 'GDPR Review 📋',
-    date: '2023-05-18',
-    status: 'In Progress',
-    score: 74,
-    findings: 5,
-  },
-  {
-    id: '003',
-    name: 'ISO 27001 🔒',
-    date: '2023-05-20',
-    status: 'Pending',
-    score: null,
-    findings: 0,
-  },
-];
-
-// ✅ Example stats with emojis
-const auditStats = [
-  { title: 'Total Audits 📊', value: allAudits.length, change: '+2', trend: 'up' },
-  { title: 'Completed Audits ✅', value: allAudits.filter(a => a.status === 'Completed').length, change: '+1', trend: 'up' },
-  { title: 'Pending Audits ⏳', value: allAudits.filter(a => a.status === 'Pending').length, change: '0', trend: 'down' },
-  {
-    title: 'Average Score 🎯',
-    value: (() => {
-      const scores = allAudits.map(a => a.score).filter(Boolean);
-      const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 'N/A';
-      return typeof avg === 'number' ? `${avg}%` : avg;
-    })(),
-    change: '+5%',
-    trend: 'up',
-  },
-];
-
 const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [auditType, setAuditType] = useState('static');
-  const [showAuditScene, setShowAuditScene] = useState(false);
+  const [file, setFile] = useState(null); // State for the uploaded .json file
+  const [loading, setLoading] = useState(false); // State for loading feedback
+  const [recentAudits, setRecentAudits] = useState([]); // State for recent audits
 
   const closeAuditModal = () => {
     setIsModalOpen(false);
-    setShowAuditScene(false);
+    setFile(null);
+    setLoading(false);
   };
 
   const closeReportModal = () => {
     setShowReportModal(false);
+    setRecentAudits([]); // Reset recent audits on close
   };
 
-  const handleBeginAudit = () => {
-    setShowAuditScene(true);
+  const runAudit = async () => {
+    if (!file) {
+      alert('Please upload a .json plan file to proceed.');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('plan', file);
+
+    try {
+      const response = await axios.post('https://auditservice.agreeableplant-e53e6c49.westus2.azurecontainerapps.io/api/audit', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'x-user': 'reda', // Include user ID if required
+          Authorization: `Bearer ${localStorage.getItem('token')}` // Include token if required
+        },
+      });
+      console.log('Audit response:', response.data);
+      alert('Audit run successfully! Check the reports section for results.');
+      closeAuditModal();
+    } catch (err) {
+      console.error('Audit failed:', err);
+      alert(`Failed to run audit: ${err.response?.data?.message || err.message}`);
+      setLoading(false);
+    }
+  };
+
+  const generateReport = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('https://auditservice.agreeableplant-e53e6c49.westus2.azurecontainerapps.io/report', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}` // Include token if required
+        },
+      });
+      setRecentAudits(response.data); // Assuming response.data is an array of reports
+    } catch (err) {
+      console.error('Failed to fetch report:', err);
+      alert(`Failed to generate report: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getHighestSeverity = (findings) => {
+    if (!findings || findings.length === 0) return 'N/A';
+    const severityOrder = { high: 3, medium: 2, low: 1 };
+    const highest = findings.reduce((max, finding) => {
+      const severity = finding.severity?.toLowerCase();
+      return severityOrder[severity] > severityOrder[max] ? severity : max;
+    }, 'low');
+    return highest.charAt(0).toUpperCase() + highest.slice(1);
   };
 
   const handleExport = (format) => {
-    // TODO: Replace with real export logic
-    alert(`Exporting as ${format}... 📤`);
+    if (!recentAudits || recentAudits.length === 0) {
+      alert('No recent audit data available to export.');
+      return;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    if (format === 'PDF') {
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(22);
+      doc.setTextColor('#2c3e50');
+      doc.text('AuditCloud Audit Report', 20, 20);
+      doc.setFontSize(10);
+      doc.setTextColor('#7f8c8d');
+      doc.text(`Generated: ${new Date().toLocaleString('en-US', { timeZone: 'UTC', hour12: true })}`, 20, 28);
+      doc.setDrawColor('#3498db');
+      doc.setLineWidth(0.5);
+      doc.line(20, 32, 190, 32);
+
+      // Summary Section
+      let y = 40;
+      doc.setFontSize(12);
+      doc.setTextColor('#2c3e50');
+      doc.text('Summary', 20, y);
+      y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor('#34495e');
+      const totalAudits = recentAudits.length;
+      const averageScore = recentAudits.reduce((sum, audit) => sum + (audit.score || 0), 0) / totalAudits || 0;
+      doc.text(`Total Audits: ${totalAudits}`, 20, y);
+      y += 10;
+      doc.text(`Average Score: ${averageScore.toFixed(1)}%`, 20, y);
+      y += 10;
+      doc.setDrawColor('#bdc3c7');
+      doc.line(20, y, 190, y);
+      y += 10;
+
+      // Recent Audits Table
+      doc.setFontSize(12);
+      doc.text('Recent Audits', 20, y);
+      y += 10;
+      doc.autoTable({
+        startY: y,
+        head: [['#', 'Report Name', 'Score']],
+        body: recentAudits.map((audit, index) => [
+          index + 1,
+          audit.source_file || 'Unnamed Audit',
+          `${audit.score || 'N/A'}%`
+        ]),
+        theme: 'grid',
+        styles: {
+          fontSize: 10,
+          cellPadding: 5,
+          textColor: '#34495e',
+          lineColor: '#bdc3c7',
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: '#3498db',
+          textColor: '#ffffff',
+          fontStyle: 'bold',
+        },
+        alternateRowStyles: {
+          fillColor: '#f5f6fa',
+        },
+        margin: { left: 20, right: 20 },
+      });
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor('#3498db');
+        doc.text('AuditCloud', 20, 290, { angle: 90 });
+        doc.setTextColor('#7f8c8d');
+        doc.text(`Page ${i} of ${pageCount}`, 180, 290);
+      }
+
+      doc.save(`audit-report-${timestamp}.pdf`);
+    } else if (format === 'CSV') {
+      const headers = ['Report Name', 'Score'];
+      const rows = recentAudits.map(audit => [
+        audit.source_file || 'Unnamed Audit',
+        `${audit.score || 'N/A'}%`
+      ]);
+      const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `audit-report-${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (format === 'JSON') {
+      const exportData = recentAudits.map(audit => ({
+        reportName: audit.source_file || 'Unnamed Audit',
+        score: `${audit.score || 'N/A'}%`
+      }));
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `audit-report-${timestamp}.json`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
     closeReportModal();
   };
 
@@ -145,7 +262,7 @@ const Header = () => {
           <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
             🚀 New Audit Now
           </button>
-          <button className="btn-secondary" onClick={() => setShowReportModal(true)}>
+          <button className="btn-secondary" onClick={() => { setShowReportModal(true); generateReport(); }}>
             📊 Generate Report
           </button>
         </div>
@@ -157,23 +274,19 @@ const Header = () => {
           <div className="modal-content">
             <button className="modal-close" onClick={closeAuditModal}>×</button>
 
-            {!showAuditScene ? (
-              <>
-                <h2>🎯 Choose Audit Type</h2>
-                <select value={auditType} onChange={(e) => setAuditType(e.target.value)}>
-                  <option value="static">🔍 Static Audit</option>
-                  <option value="dynamic">⚡ Dynamic Audit</option>
-                </select>
-                <button className="btn-primary" onClick={handleBeginAudit}>
-                  ▶️ Proceed
-                </button>
-              </>
-            ) : (
-              <>
-                {auditType === 'static' && <StaticAuditScene onClose={closeAuditModal} />}
-                {auditType === 'dynamic' && <DynamicAuditScene onClose={closeAuditModal} />}
-              </>
-            )}
+            <h2>🎯 Run Static Audit</h2>
+            <div style={{ marginTop: '1rem' }}>
+              <label htmlFor="auditFile">📥 Upload .json Plan File</label>
+              <input
+                id="auditFile"
+                type="file"
+                accept=".json"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </div>
+            <button className="btn-primary" onClick={runAudit} disabled={!file || loading}>
+              {loading ? 'Running Audit... ⏳' : '▶️ Run Audit'}
+            </button>
           </div>
         </div>
       )}
@@ -183,66 +296,9 @@ const Header = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <button className="modal-close" onClick={closeReportModal}>×</button>
-            <h2>📋 Audit Report Summary</h2>
+            <h2>📋 Generate Report</h2>
 
-            <table className="report-summary-table">
-              <thead>
-                <tr>
-                  <th>#️⃣</th>
-                  <th>📊 Metric</th>
-                  <th>📈 Value</th>
-                  <th>📉 Change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditStats.map((stat, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{stat.title}</td>
-                    <td>{stat.value}</td>
-                    <td style={{ color: stat.trend === 'up' ? '#16a34a' : '#dc2626' }}>
-                      {stat.change} {stat.trend === 'up' ? '📈' : '📉'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* ✅ Audits Table */}
-            <div className="audit-table-wrapper">
-              <h3>🗂️ Recent Audits</h3>
-              <table className="audit-table">
-                <thead>
-                  <tr>
-                    <th>🏷️ Name</th>
-                    <th>📅 Date</th>
-                    <th>📌 Status</th>
-                    <th>🎯 Score</th>
-                    <th>🔍 Findings</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allAudits.map((audit) => (
-                    <tr key={audit.id}>
-                      <td>{audit.name}</td>
-                      <td>{audit.date}</td>
-                      <td>
-                        <span className={`status-badge ${audit.status.toLowerCase().replace(' ', '-')}`}>
-                          {audit.status === 'Completed' && '✅ '}
-                          {audit.status === 'In Progress' && '🔄 '}
-                          {audit.status === 'Pending' && '⏳ '}
-                          {audit.status}
-                        </span>
-                      </td>
-                      <td>{audit.score ? `${audit.score}% 🎯` : 'N/A'}</td>
-                      <td>{audit.findings} {audit.findings > 0 ? '⚠️' : '✅'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* ✅ Export Options */}
+            {/* Export Options */}
             <div style={{ marginTop: '1.5rem' }}>
               <p><strong>📤 Export As:</strong></p>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>

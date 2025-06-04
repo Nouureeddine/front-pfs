@@ -2,27 +2,16 @@ import React from 'react';
 import './Nav.css';
 
 export default function Nav({ setActiveTab, activeTab }) {
-  
-  // Logout function
   const handleLogout = () => {
-    // Clear authentication tokens/data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    sessionStorage.clear();
-    
-    // You can also make API call to logout endpoint if needed
-    // try {
-    //   await fetch('/api/auth/logout', { 
-    //     method: 'POST',
-    //     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    //   });
-    // } catch (error) {
-    //   console.error('Logout error:', error);
-    // }
-    
-    // Redirect to login page
-    window.location.href = '/login'; // or use your router navigation
-    // If using React Router: navigate('/login');
+    // Add your logout logic here
+    if (true) {
+      // Clear any stored authentication tokens
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userData');
+      
+      // Redirect to login page or reload
+      window.location.href = '/'; // or window.location.reload();
+    }
   };
 
   return (
@@ -31,7 +20,7 @@ export default function Nav({ setActiveTab, activeTab }) {
         <h1 className="nav-title">AuditCloud</h1>
         <p className="nav-welcome">Welcome Back, Admin!</p>
       </div>
-      
+
       <ul className="nav-menu">
         <li
           className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
@@ -51,12 +40,7 @@ export default function Nav({ setActiveTab, activeTab }) {
         >
           <span>Rules Management</span>
         </li>
-        <li
-          className={`nav-item ${activeTab === 'docs' ? 'active' : ''}`}
-          onClick={() => setActiveTab('docs')}
-        >
-          <span>Triggered by Pipelines</span>
-        </li>
+        
         <li
           className={`nav-item ${activeTab === 'docs' ? 'active' : ''}`}
           onClick={() => setActiveTab('docs')}
@@ -64,11 +48,15 @@ export default function Nav({ setActiveTab, activeTab }) {
           <span>Docs</span>
         </li>
       </ul>
-      
-      {/* Logout Button */}
+
+      {/* Logout section at the bottom */}
       <div className="nav-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          <span>🚪</span>
+        <button 
+          className="logout-btn"
+          onClick={handleLogout}
+          title="Logout"
+        >
+          <span className="logout-icon">🚪</span>
           <span>Logout</span>
         </button>
       </div>
